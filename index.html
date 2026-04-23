@@ -1,161 +1,233 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>Augen Auf Compass</title>
+<meta charset="UTF-8">
+<title>Augen Auf Compass</title>
+
+<style>
+body{
+  margin:0;
+  background:#0b1220;
+  color:#e5e7eb;
+  font-family:Arial, sans-serif;
+}
+
+header{
+  text-align:center;
+  padding:18px;
+  font-size:20px;
+  font-weight:600;
+  background:#0f172a;
+  position:sticky;
+  top:0;
+}
+
+.container{
+  padding:16px;
+}
+
+button{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border:none;
+  border-radius:10px;
+  background:#1f2937;
+  color:white;
+  font-size:15px;
+}
+
+button:hover{
+  background:#374151;
+}
+
+.card{
+  background:#111827;
+  padding:14px;
+  margin:12px 0;
+  border-radius:14px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.3);
+  transition:0.2s;
+}
+
+.card.done{
+  border-left:4px solid #22c55e;
+  opacity:0.8;
+}
+
+.compass{
+  width:140px;
+  height:140px;
+  border-radius:50%;
+  border:3px solid #374151;
+  margin:20px auto;
+  position:relative;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.arrow{
+  width:4px;
+  height:60px;
+  background:#ef4444;
+  position:absolute;
+  bottom:50%;
+  transform-origin:bottom;
+  border-radius:4px;
+  transition:transform 0.15s linear;
+}
+
+.small{
+  font-size:13px;
+  color:#9ca3af;
+}
+</style>
 </head>
 
-<body style="margin:0;background:#030712;color:white;font-family:Arial;">
+<body>
 
-<div id="app" style="padding:20px">Lade...</div>
+<header>Augen Auf Compass</header>
+
+<div class="container">
+
+<button onclick="start()">Start GPS & Kompass</button>
+
+<div class="compass">
+  <div class="arrow" id="arrow"></div>
+</div>
+
+<div style="text-align:center;margin-bottom:10px">
+  Lösungswort: <b id="word"></b>
+</div>
+
+<div id="list"></div>
+
+</div>
 
 <script>
-let userPos = null;
-let heading = 0;
-let solution = "";
-let lastVibration = null;
 
-const points = [
-  {lat:51.3753,lng:7.7025,q:"Mahnmal am Poth?",a:"B",l:"D",done:false,opt:{A:"Händler",B:"NS-Opfer",C:"Stadt"}},
-  {lat:51.3760,lng:7.7032,q:"Luftschutzstollen?",a:"B",l:"E",done:false,opt:{A:"Lager",B:"Schutzräume",C:"Treff"}},
-  {lat:51.3765,lng:7.7040,q:"Stolpersteine?",a:"B",l:"M",done:false,opt:{A:"Kunst",B:"Gedenktafeln",C:"Steine"}},
-  {lat:51.3770,lng:7.7050,q:"Jüdische Geschäfte?",a:"A",l:"O",done:false,opt:{A:"Zerstört",B:"Gefördert",C:"Unverändert"}},
-  {lat:51.3775,lng:7.7060,q:"Verfolgung?",a:"A",l:"K",done:false,opt:{A:"Religion",B:"Beruf",C:"Kleidung"}},
-  {lat:51.3780,lng:7.7070,q:"Gedenktafeln?",a:"C",l:"R",done:false,opt:{A:"Künstler",B:"Sport",C:"Verfolgung"}},
-  {lat:51.3785,lng:7.7080,q:"Stolpersteine zeigen?",a:"B",l:"A",done:false,opt:{A:"Städte",B:"Schicksale",C:"Gebäude"}},
-  {lat:51.3790,lng:7.7090,q:"Synagogen?",a:"B",l:"T",done:false,opt:{A:"Erweitert",B:"Zerstört",C:"Museen"}},
-  {lat:51.3795,lng:7.7100,q:"Erinnerung?",a:"A",l:"I",done:false,opt:{A:"Greifbar",B:"Sammeln",C:"Füllen"}},
-  {lat:51.3800,lng:7.7110,q:"Lehre?",a:"B",l:"E",done:false,opt:{A:"Vergessen",B:"Demokratie schützen",C:"Vergangenheit"}}
+let userPos=null;
+let heading=0;
+let solution="";
+let lastVib=0;
+
+const points=[
+{lat:51.3753,lng:7.7025,q:"Mahnmal am Poth?",a:"B",l:"D",opt:{A:"Händler",B:"NS-Opfer",C:"Stadt"},done:false},
+{lat:51.3760,lng:7.7032,q:"Luftschutzstollen?",a:"B",l:"E",opt:{A:"Lager",B:"Schutz",C:"Treff"},done:false},
+{lat:51.3765,lng:7.7040,q:"Stolpersteine?",a:"B",l:"M",opt:{A:"Kunst",B:"Gedenktafeln",C:"Steine"},done:false},
+{lat:51.3770,lng:7.7050,q:"Jüdische Geschäfte?",a:"A",l:"O",opt:{A:"Zerstört",B:"Gefördert",C:"Unverändert"},done:false},
+{lat:51.3775,lng:7.7060,q:"Verfolgung?",a:"A",l:"K",opt:{A:"Religion",B:"Beruf",C:"Kleidung"},done:false},
+{lat:51.3780,lng:7.7070,q:"Gedenktafeln?",a:"C",l:"R",opt:{A:"Künstler",B:"Sport",C:"Verfolgung"},done:false},
+{lat:51.3785,lng:7.7080,q:"Stolpersteine zeigen?",a:"B",l:"A",opt:{A:"Städte",B:"Schicksale",C:"Gebäude"},done:false},
+{lat:51.3790,lng:7.7090,q:"Synagogen?",a:"B",l:"T",opt:{A:"Erweitert",B:"Zerstört",C:"Museen"},done:false},
+{lat:51.3795,lng:7.7100,q:"Erinnerung?",a:"A",l:"I",opt:{A:"Greifbar",B:"Sammeln",C:"Füllen"},done:false},
+{lat:51.3800,lng:7.7110,q:"Lehre?",a:"B",l:"E",opt:{A:"Vergessen",B:"Demokratie",C:"Vergangenheit"},done:false}
 ];
 
 function distance(a,b){
-  const R=6371000;
-  const dLat=(b.lat-a.lat)*Math.PI/180;
-  const dLng=(b.lng-a.lng)*Math.PI/180;
-  const x=Math.sin(dLat/2)**2+
-    Math.cos(a.lat*Math.PI/180)*
-    Math.cos(b.lat*Math.PI/180)*
-    Math.sin(dLng/2)**2;
-  return Math.round(R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)));
+const R=6371000;
+const dLat=(b.lat-a.lat)*Math.PI/180;
+const dLng=(b.lng-a.lng)*Math.PI/180;
+const x=Math.sin(dLat/2)**2+
+Math.cos(a.lat*Math.PI/180)*
+Math.cos(b.lat*Math.PI/180)*
+Math.sin(dLng/2)**2;
+return Math.round(R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)));
 }
 
-function angle(from,to){
-  const y=Math.sin((to.lng-from.lng)*Math.PI/180)*Math.cos(to.lat*Math.PI/180);
-  const x=Math.cos(from.lat*Math.PI/180)*Math.sin(to.lat*Math.PI/180)-
-    Math.sin(from.lat*Math.PI/180)*Math.cos(to.lat*Math.PI/180)*
-    Math.cos((to.lng-from.lng)*Math.PI/180);
-  return (Math.atan2(y,x)*180/Math.PI+360)%360;
+function angle(a,b){
+const y=Math.sin((b.lng-a.lng)*Math.PI/180)*Math.cos(b.lat*Math.PI/180);
+const x=Math.cos(a.lat*Math.PI/180)*Math.sin(b.lat*Math.PI/180)-
+Math.sin(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*
+Math.cos((b.lng-a.lng)*Math.PI/180);
+return (Math.atan2(y,x)*180/Math.PI+360)%360;
 }
 
-/* iPhone + Android Fix */
 async function start(){
 
-  if (typeof DeviceOrientationEvent !== "undefined" &&
-      typeof DeviceOrientationEvent.requestPermission === "function") {
-
-    const res = await DeviceOrientationEvent.requestPermission();
-    if (res !== "granted") {
-      alert("Kompass nicht erlaubt");
-      return;
-    }
-  }
-
-  navigator.geolocation.watchPosition(pos=>{
-    userPos={lat:pos.coords.latitude,lng:pos.coords.longitude};
-    render();
-  });
-
-  window.addEventListener("deviceorientation",e=>{
-    if(e.alpha!==null){
-      heading = e.webkitCompassHeading || e.alpha;
-      render();
-    }
-  });
+if(typeof DeviceOrientationEvent!=="undefined" &&
+typeof DeviceOrientationEvent.requestPermission==="function"){
+const res=await DeviceOrientationEvent.requestPermission();
+if(res!=="granted")return;
 }
 
-function vibrate(distance){
-  if(!navigator.vibrate) return;
+navigator.geolocation.watchPosition(p=>{
+userPos={lat:p.coords.latitude,lng:p.coords.longitude};
+update();
+});
 
-  if(distance < 50){
-    const now = Date.now();
-    if(!lastVibration || now - lastVibration > 3000){
-      navigator.vibrate([100,50,100]);
-      lastVibration = now;
-    }
-  }
+window.addEventListener("deviceorientation",e=>{
+if(e.alpha!==null){
+heading=e.webkitCompassHeading||e.alpha;
+updateCompass();
+}
+});
 }
 
-function answer(i,val){
-  if(points[i].a===val){
-    points[i].done=true;
-  }
-
-  solution = points.filter(p=>p.done).map(p=>p.l).join("");
-  render();
+function vibrate(dist){
+if(!navigator.vibrate)return;
+if(dist<50 && Date.now()-lastVib>2500){
+navigator.vibrate(80);
+lastVib=Date.now();
+}
 }
 
-function render(){
-  const next = points.find(p=>!p.done);
-
-  let rot = 0;
-
-  if(userPos && next){
-    const dist = distance(userPos,next);
-    vibrate(dist);
-    rot = angle(userPos,next) - heading;
-  }
-
-  let html = `
-    <h1 style="text-align:center">Augen Auf Compass</h1>
-
-    <button onclick="start()" style="width:100%;padding:10px;">
-      Start GPS & Kompass
-    </button>
-
-    <div style="display:flex;justify-content:center;margin:20px;">
-      <div style="width:140px;height:140px;border:3px solid gray;border-radius:50%;display:flex;align-items:center;justify-content:center;">
-        <div style="width:4px;height:60px;background:red;transform:rotate(${rot}deg);transform-origin:bottom;"></div>
-      </div>
-    </div>
-
-    <h2 style="text-align:center">Lösungswort: ${solution}</h2>
-  `;
-
-  points.forEach((p,i)=>{
-    const dist = userPos ? distance(userPos,p) : null;
-    const near = dist && dist < 80;
-
-    html += `
-      <div style="background:#111827;padding:15px;margin:10px;">
-        <b>Station ${i+1}</b><br>
-    `;
-
-    if(dist){
-      html += "Entfernung: " + dist + " m<br>";
-    }
-
-    if(near && !p.done){
-      html += "<p>"+p.q+"</p>";
-      for(let k in p.opt){
-        html += `<button onclick="answer(${i},'${k}')">${k}) ${p.opt[k]}</button><br>`;
-      }
-    }
-
-    if(p.done){
-      html += "gelöst: "+p.l;
-    }
-
-    html += "</div>";
-  });
-
-  if(solution==="DEMOKRATIE"){
-    html += "<h1 style='text-align:center'>FERTIG</h1>";
-  }
-
-  document.getElementById("app").innerHTML = html;
+function answer(i,v){
+if(points[i].a===v){
+points[i].done=true;
+}
+solution=points.filter(p=>p.done).map(p=>p.l).join("");
+update();
 }
 
-render();
+function updateCompass(){
+const next=points.find(p=>!p.done);
+if(!userPos||!next)return;
+const rot=angle(userPos,next)-heading;
+document.getElementById("arrow").style.transform=`rotate(${rot}deg)`;
+}
+
+function update(){
+
+let next=points.find(p=>!p.done);
+if(userPos&&next){
+let d=distance(userPos,next);
+vibrate(d);
+}
+
+document.getElementById("word").innerText=solution;
+
+let html="";
+points.forEach((p,i)=>{
+let d=userPos?distance(userPos,p):null;
+let near=d&&d<80;
+
+html+=`<div class="card ${p.done?'done':''}">
+<b>Station ${i+1}</b><br>
+<div class="small">${d?d+" m entfernt":""}</div>`;
+
+if(near&&!p.done){
+html+=`<p>${p.q}</p>`;
+for(let k in p.opt){
+html+=`<button onclick="answer(${i},'${k}')">${k}) ${p.opt[k]}</button>`;
+}
+}
+
+if(p.done){
+html+="✔ "+p.l;
+}
+
+html+="</div>";
+});
+
+document.getElementById("list").innerHTML=html;
+
+updateCompass();
+}
+
+update();
+
 </script>
 
 </body>
