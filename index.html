@@ -9,78 +9,99 @@ body{
   margin:0;
   background:#0b1220;
   color:#e5e7eb;
-  font-family:Arial, sans-serif;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
+/* Header */
 header{
   text-align:center;
   padding:18px;
-  font-size:20px;
-  font-weight:600;
-  background:#0f172a;
+  font-size:18px;
+  letter-spacing:0.5px;
+  background:rgba(15,23,42,0.6);
+  backdrop-filter: blur(10px);
   position:sticky;
   top:0;
 }
 
+/* Layout */
 .container{
-  padding:16px;
+  padding:18px;
+  max-width:720px;
+  margin:0 auto;
 }
 
+/* Button */
 button{
   width:100%;
   padding:12px;
   margin-top:10px;
   border:none;
-  border-radius:10px;
-  background:#1f2937;
-  color:white;
-  font-size:15px;
+  border-radius:12px;
+  background:linear-gradient(135deg,#1f2937,#111827);
+  color:#e5e7eb;
+  font-size:14px;
+  transition:0.2s;
 }
 
 button:hover{
-  background:#374151;
+  transform:translateY(-1px);
+  background:linear-gradient(135deg,#374151,#1f2937);
 }
 
+/* Card */
 .card{
-  background:#111827;
+  background:rgba(17,24,39,0.75);
+  border:1px solid rgba(255,255,255,0.05);
   padding:14px;
   margin:12px 0;
-  border-radius:14px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.3);
+  border-radius:16px;
+  backdrop-filter: blur(8px);
   transition:0.2s;
 }
 
 .card.done{
-  border-left:4px solid #22c55e;
-  opacity:0.8;
+  border-left:3px solid #34d399;
+  opacity:0.85;
 }
 
+/* Compass */
 .compass{
-  width:140px;
-  height:140px;
+  width:150px;
+  height:150px;
   border-radius:50%;
-  border:3px solid #374151;
-  margin:20px auto;
-  position:relative;
+  margin:22px auto;
+  background:radial-gradient(circle at 30% 30%, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+  border:1px solid rgba(255,255,255,0.1);
+  box-shadow:0 10px 30px rgba(0,0,0,0.4);
   display:flex;
   justify-content:center;
   align-items:center;
+  position:relative;
 }
 
 .arrow{
-  width:4px;
+  width:3px;
   height:60px;
-  background:#ef4444;
-  position:absolute;
-  bottom:50%;
-  transform-origin:bottom;
+  background:#f87171;
   border-radius:4px;
+  transform-origin:bottom;
   transition:transform 0.15s linear;
+  box-shadow:0 0 10px rgba(248,113,113,0.4);
+}
+
+/* Text */
+.word{
+  text-align:center;
+  font-size:16px;
+  letter-spacing:2px;
+  margin-bottom:8px;
+  color:#cbd5e1;
 }
 
 .small{
-  font-size:13px;
-  color:#9ca3af;
+  font-size:12px;
+  color:#94a3b8;
 }
 </style>
 </head>
@@ -91,14 +112,14 @@ button:hover{
 
 <div class="container">
 
-<button onclick="start()">Start GPS & Kompass</button>
+<button onclick="start()">Start Navigation</button>
 
 <div class="compass">
   <div class="arrow" id="arrow"></div>
 </div>
 
-<div style="text-align:center;margin-bottom:10px">
-  Lösungswort: <b id="word"></b>
+<div class="word">
+  Lösungswort: <span id="word"></span>
 </div>
 
 <div id="list"></div>
@@ -113,16 +134,16 @@ let solution="";
 let lastVib=0;
 
 const points=[
-{lat:51.3753,lng:7.7025,q:"Mahnmal am Poth?",a:"B",l:"D",opt:{A:"Händler",B:"NS-Opfer",C:"Stadt"},done:false},
-{lat:51.3760,lng:7.7032,q:"Luftschutzstollen?",a:"B",l:"E",opt:{A:"Lager",B:"Schutz",C:"Treff"},done:false},
-{lat:51.3765,lng:7.7040,q:"Stolpersteine?",a:"B",l:"M",opt:{A:"Kunst",B:"Gedenktafeln",C:"Steine"},done:false},
-{lat:51.3770,lng:7.7050,q:"Jüdische Geschäfte?",a:"A",l:"O",opt:{A:"Zerstört",B:"Gefördert",C:"Unverändert"},done:false},
-{lat:51.3775,lng:7.7060,q:"Verfolgung?",a:"A",l:"K",opt:{A:"Religion",B:"Beruf",C:"Kleidung"},done:false},
-{lat:51.3780,lng:7.7070,q:"Gedenktafeln?",a:"C",l:"R",opt:{A:"Künstler",B:"Sport",C:"Verfolgung"},done:false},
-{lat:51.3785,lng:7.7080,q:"Stolpersteine zeigen?",a:"B",l:"A",opt:{A:"Städte",B:"Schicksale",C:"Gebäude"},done:false},
-{lat:51.3790,lng:7.7090,q:"Synagogen?",a:"B",l:"T",opt:{A:"Erweitert",B:"Zerstört",C:"Museen"},done:false},
-{lat:51.3795,lng:7.7100,q:"Erinnerung?",a:"A",l:"I",opt:{A:"Greifbar",B:"Sammeln",C:"Füllen"},done:false},
-{lat:51.3800,lng:7.7110,q:"Lehre?",a:"B",l:"E",opt:{A:"Vergessen",B:"Demokratie",C:"Vergangenheit"},done:false}
+{lat:51.3753,lng:7.7025,q:"Mahnmal am Poth?",a:"B",l:"D",done:false,opt:{A:"Händler",B:"NS-Opfer",C:"Stadt"}},
+{lat:51.3760,lng:7.7032,q:"Luftschutzstollen?",a:"B",l:"E",done:false,opt:{A:"Lager",B:"Schutzräume",C:"Treffpunkte"}},
+{lat:51.3765,lng:7.7040,q:"Stolpersteine?",a:"B",l:"M",done:false,opt:{A:"Kunst",B:"Gedenktafeln",C:"Steine"}},
+{lat:51.3770,lng:7.7050,q:"Jüdische Geschäfte?",a:"A",l:"O",done:false,opt:{A:"Zerstört",B:"Gefördert",C:"Unverändert"}},
+{lat:51.3775,lng:7.7060,q:"Verfolgung?",a:"A",l:"K",done:false,opt:{A:"Religion",B:"Beruf",C:"Kleidung"}},
+{lat:51.3780,lng:7.7070,q:"Gedenktafeln?",a:"C",l:"R",done:false,opt:{A:"Künstler",B:"Sport",C:"Verfolgung"}},
+{lat:51.3785,lng:7.7080,q:"Stolpersteine zeigen?",a:"B",l:"A",done:false,opt:{A:"Städte",B:"Schicksale",C:"Gebäude"}},
+{lat:51.3790,lng:7.7090,q:"Synagogen?",a:"B",l:"T",done:false,opt:{A:"Erweitert",B:"Zerstört",C:"Museen"}},
+{lat:51.3795,lng:7.7100,q:"Erinnerung?",a:"A",l:"I",done:false,opt:{A:"Greifbar",B:"Sammeln",C:"Füllen"}},
+{lat:51.3800,lng:7.7110,q:"Lehre?",a:"B",l:"E",done:false,opt:{A:"Vergessen",B:"Demokratie schützen",C:"Vergangenheit"}}
 ];
 
 function distance(a,b){
@@ -144,10 +165,12 @@ Math.cos((b.lng-a.lng)*Math.PI/180);
 return (Math.atan2(y,x)*180/Math.PI+360)%360;
 }
 
+/* iPhone Fix */
 async function start(){
 
 if(typeof DeviceOrientationEvent!=="undefined" &&
 typeof DeviceOrientationEvent.requestPermission==="function"){
+
 const res=await DeviceOrientationEvent.requestPermission();
 if(res!=="granted")return;
 }
@@ -165,9 +188,9 @@ updateCompass();
 });
 }
 
-function vibrate(dist){
+function vibrate(d){
 if(!navigator.vibrate)return;
-if(dist<50 && Date.now()-lastVib>2500){
+if(d<50 && Date.now()-lastVib>2500){
 navigator.vibrate(80);
 lastVib=Date.now();
 }
@@ -192,19 +215,19 @@ function update(){
 
 let next=points.find(p=>!p.done);
 if(userPos&&next){
-let d=distance(userPos,next);
-vibrate(d);
+vibrate(distance(userPos,next));
 }
 
 document.getElementById("word").innerText=solution;
 
 let html="";
+
 points.forEach((p,i)=>{
 let d=userPos?distance(userPos,p):null;
 let near=d&&d<80;
 
 html+=`<div class="card ${p.done?'done':''}">
-<b>Station ${i+1}</b><br>
+<strong>Station ${i+1}</strong><br>
 <div class="small">${d?d+" m entfernt":""}</div>`;
 
 if(near&&!p.done){
@@ -215,14 +238,13 @@ html+=`<button onclick="answer(${i},'${k}')">${k}) ${p.opt[k]}</button>`;
 }
 
 if(p.done){
-html+="✔ "+p.l;
+html+=`<div class="small">gelöst: ${p.l}</div>`;
 }
 
-html+="</div>";
+html+=`</div>`;
 });
 
 document.getElementById("list").innerHTML=html;
-
 updateCompass();
 }
 
